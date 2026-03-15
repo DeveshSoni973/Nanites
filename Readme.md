@@ -93,8 +93,8 @@ users (
 ```sql
 nodes (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
-  parent_id     UUID REFERENCES nodes(id) ON DELETE CASCADE,  -- null = root
+  user_id       UUID REFERENCES users(id) ,
+  parent_id     UUID REFERENCES nodes(id) ,  -- null = root
   type          TEXT CHECK (type IN ('note', 'folder')),
   title         TEXT NOT NULL,
   content       TEXT,                     -- null if folder

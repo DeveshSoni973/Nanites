@@ -17,11 +17,9 @@ class Node(Base):
     __tablename__ = "nodes"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("nodes.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("nodes.id"), nullable=True
     )
     type: Mapped[NodeType] = mapped_column(Enum(NodeType), nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
