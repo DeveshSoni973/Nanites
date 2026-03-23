@@ -53,8 +53,11 @@ async def get_nodes(
     query = select(Node).where(
         Node.user_id == user_id,
         Node.deleted_at.is_(None),
-        Node.parent_id == parent_id,
     )
+    if parent_id is None:
+        query = query.where(Node.parent_id.is_(None))
+    else:
+        query = query.where(Node.parent_id == parent_id)
     if type:
         query = query.where(Node.type == type)
     if title:
@@ -88,7 +91,7 @@ async def update_node(
         .values(**values)
     )
     await db.commit()
-    return result.rowcount
+    return result.rowcount or 0  # type: ignore
 
 
 async def delete_node(
@@ -102,7 +105,7 @@ async def delete_node(
         .values(deleted_at=datetime.now(timezone.utc))
     )
     await db.commit()
-    return result.rowcount
+    return result.rowcount or 0  # type: ignore
 
 
 async def search_nodes_by_content(
