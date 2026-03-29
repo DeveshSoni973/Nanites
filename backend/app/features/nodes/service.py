@@ -1,10 +1,39 @@
 import uuid
 from datetime import datetime, timezone
 
+from arq import create_pool
+from arq.connections import RedisSettings
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.features.nodes.models import Node, NodeType
+
+_arq_pool = None
+
+
+async def get_arq_pool():
+    global _arq_pool
+    if _arq_pool is None:
+        url = settings.REDIS_URL.replace("redis://", "")
+        host_port, db_num = url.rsplit("/", 1)
+        host, port = host_port.split(":")
+        _arq_pool = await create_pool(
+            RedisSettings(host=host, port=int(port), database=int(db_num))
+        )
+    return _arq_pool
+
+
+async def validate_parent(
+    db: AsyncSession, user_id: uuid.UUID, parent_id: uuid.UUID | None
+):
+    if parent_id is None:
+        return
+    parent = await get_node(db, parent_id, user_id)
+    if parent is None:
+        raise ValueError("Parent does not exist")
+    if parent.type != NodeType.folder:
+        raise ValueError("Cannot add a child folder or note to a note.")
 
 
 async def create_node(
@@ -15,6 +44,7 @@ async def create_node(
     parent_id: uuid.UUID | None = None,
     content: str | None = None,
 ) -> Node:
+    await validate_parent(db, user_id, parent_id)
     node = Node(
         user_id=user_id,
         title=title,
@@ -25,6 +55,9 @@ async def create_node(
     db.add(node)
     await db.commit()
     await db.refresh(node)
+    if node.type == NodeType.note and node.content:
+        pool = await get_arq_pool()
+        await pool.enqueue_job("embed_node", str(node.id))
     return node
 
 
@@ -75,6 +108,7 @@ async def update_node(
     content: str | None = None,
     parent_id: uuid.UUID | None = None,
 ) -> int:
+    await validate_parent(db, user_id, parent_id)
     values = {}
     if title is not None:
         values["title"] = title
@@ -91,6 +125,9 @@ async def update_node(
         .values(**values)
     )
     await db.commit()
+    if content is not None:
+        pool = await get_arq_pool()
+        await pool.enqueue_job("embed_node", str(node_id))
     return result.rowcount or 0  # type: ignore
 
 

@@ -56,6 +56,7 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user or user.deleted_at is not None:
         raise HTTPException(status_code=401, detail="User not found")
+    await blacklist_token(token)
     return TokenResponse(
         access_token=create_access_token(user),
         refresh_token=create_refresh_token(user),

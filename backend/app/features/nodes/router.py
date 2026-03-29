@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
 from app.features.auth.dependencies import get_current_user
+from app.features.embeddings.service import semantic_search
 from app.features.nodes.models import NodeType
 from app.features.nodes.schema import (
     NodeCreate,
@@ -59,7 +60,21 @@ async def search(
     current_user: User = Depends(get_current_user),
 ):
     text_results = await search_nodes_by_content(db, current_user.id, q)
-    semantic_results = []
+
+    semantic_hits = await semantic_search(db, current_user.id, q)
+    semantic_results = [
+        NodeResponse(
+            id=hit["node"].id,
+            parent_id=hit["node"].parent_id,
+            type=hit["node"].type,
+            title=hit["node"].title,
+            snippet=hit["snippet"],
+            created_at=hit["node"].created_at,
+            updated_at=hit["node"].updated_at,
+        )
+        for hit in semantic_hits
+    ]
+
     return {
         "text_results": text_results,
         "semantic_results": semantic_results,

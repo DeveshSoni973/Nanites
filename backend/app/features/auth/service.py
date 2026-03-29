@@ -15,13 +15,13 @@ redis_client = aioredis.from_url(settings.REDIS_URL)
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User:
     user = await get_user_by_email(db, email)
     if not user:
-        raise ValueError("User not found")
+        raise ValueError("Invalid email or password")
     if not user.is_active:
         raise ValueError("Email not verified")
     if user.deleted_at is not None:
-        raise ValueError("Account deleted")
+        raise ValueError("Invalid email or password")
     if not verify_password(password, user.hashed_password):
-        raise ValueError("Invalid credentials")
+        raise ValueError("Invalid email or password")
     return user
 
 
