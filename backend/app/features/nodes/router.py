@@ -10,6 +10,7 @@ from app.features.nodes.models import NodeType
 from app.features.nodes.schema import (
     NodeCreate,
     NodeResponse,
+    NodeDetailResponse,
     NodeUpdate,
     SearchResponse,
 )
@@ -26,7 +27,7 @@ from app.features.users.models import User
 router = APIRouter(prefix="/nodes", tags=["nodes"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=NodeResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=NodeDetailResponse)
 async def create(
     payload: NodeCreate,
     db: AsyncSession = Depends(get_db),
@@ -82,7 +83,7 @@ async def search(
     }
 
 
-@router.get("/{node_id}", response_model=NodeResponse)
+@router.get("/{node_id}", response_model=NodeDetailResponse)
 async def get_one(
     node_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

@@ -1,4 +1,5 @@
 import uuid
+import logging
 from datetime import datetime, timezone
 
 from arq import create_pool
@@ -9,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import ResourceNotFoundError, ValidationError
 from app.features.nodes.models import Node, NodeType
+
+logger = logging.getLogger(__name__)
 
 _arq_pool = None
 
@@ -57,8 +60,13 @@ async def create_node(
     await db.commit()
     await db.refresh(node)
     if node.type == NodeType.note and node.content:
-        pool = await get_arq_pool()
-        await pool.enqueue_job("embed_node", str(node.id))
+        try:
+            logger.info(f"Enqueueing embed job for node {node.id}")
+            pool = await get_arq_pool()
+            job = await pool.enqueue_job("embed_node", str(node.id))
+            logger.info(f"Enqueued embed job {job.job_id} for node {node.id}")
+        except Exception as e:
+            logger.error(f"Failed to enqueue embed job for node {node.id}: {e}", exc_info=True)
     return node
 
 
@@ -131,8 +139,13 @@ async def update_node(
     if result.rowcount == 0:
         raise ResourceNotFoundError("Node not found")
     if content is not None:
-        pool = await get_arq_pool()
-        await pool.enqueue_job("embed_node", str(node_id))
+        try:
+            logger.info(f"Enqueueing embed job for updated node {node_id}")
+            pool = await get_arq_pool()
+            job = await pool.enqueue_job("embed_node", str(node_id))
+            logger.info(f"Enqueued embed job {job.job_id} for node {node_id}")
+        except Exception as e:
+            logger.error(f"Failed to enqueue embed job for node {node_id}: {e}", exc_info=True)
     return result.rowcount
 
 

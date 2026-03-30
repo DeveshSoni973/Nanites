@@ -32,6 +32,10 @@ class NodeResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class NodeDetailResponse(NodeResponse):
+    content: str | None = None
+
+
 class SearchResponse(BaseModel):
     text_results: list[NodeResponse]
     semantic_results: list[NodeResponse]

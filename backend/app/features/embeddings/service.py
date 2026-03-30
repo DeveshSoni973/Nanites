@@ -1,13 +1,14 @@
 import uuid
+import logging
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sentence_transformers import SentenceTransformer
 
 from app.features.embeddings.models import Embedding, EmbedStatus
 from app.features.nodes.models import Node, NodeType
+from app.ml.model import encode_texts
 
-_search_model = SentenceTransformer("all-MiniLM-L6-v2")
+logger = logging.getLogger(__name__)
 
 
 def chunk_text(content: str, chunk_size: int = 800, overlap: int = 200) -> list[str]:
@@ -64,7 +65,8 @@ async def semantic_search(
     query: str,
     limit: int = 10,
 ) -> list[dict]:
-    query_embedding = _search_model.encode(query).tolist()
+    logger.info(f"[search] Semantic search query={query!r} user_id={user_id}")
+    query_embedding = encode_texts(query)
     result = await db.execute(
         select(Embedding, Node)
         .join(Node, Embedding.node_id == Node.id)
@@ -79,6 +81,7 @@ async def semantic_search(
         .limit(limit)
     )
     rows = result.all()
+    logger.info(f"[search] Found {len(rows)} semantic results")
     return [
         {
             "node": row.Node,

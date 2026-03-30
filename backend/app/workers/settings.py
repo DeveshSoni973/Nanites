@@ -14,3 +14,4 @@ def get_redis_settings() -> RedisSettings:
 class WorkerSettings:
     functions = [embed_node]
     redis_settings = get_redis_settings()
+    max_jobs = 1
