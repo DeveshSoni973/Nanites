@@ -33,10 +33,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
-    try:
-        user = await authenticate_user(db, form_data.username, form_data.password)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    user = await authenticate_user(db, form_data.username, form_data.password)
     return TokenResponse(
         access_token=create_access_token(user),
         refresh_token=create_refresh_token(user),

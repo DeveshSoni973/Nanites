@@ -47,10 +47,11 @@ async def browse(
     parent_id: uuid.UUID | None = None,
     type: NodeType | None = None,
     title: str | None = None,
+    global_scan: bool = False,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return await get_nodes(db, current_user.id, parent_id, type, title)
+    return await get_nodes(db, current_user.id, parent_id, type, title, global_scan)
 
 
 @router.get("/search", response_model=SearchResponse)
@@ -89,7 +90,8 @@ async def get_one(
 ):
     node = await get_node(db, node_id, current_user.id)
     if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
+        from app.core.exceptions import ResourceNotFoundError
+        raise ResourceNotFoundError("Node not found")
     return node
 
 
@@ -100,7 +102,7 @@ async def update(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    rows = await update_node(
+    await update_node(
         db,
         node_id,
         current_user.id,
@@ -108,8 +110,6 @@ async def update(
         content=payload.content,
         parent_id=payload.parent_id,
     )
-    if rows == 0:
-        raise HTTPException(status_code=404, detail="Node not found")
     return {"message": "updated"}
 
 
@@ -119,7 +119,5 @@ async def delete(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    rows = await delete_node(db, node_id, current_user.id)
-    if rows == 0:
-        raise HTTPException(status_code=404, detail="Node not found")
+    await delete_node(db, node_id, current_user.id)
     return {"message": "deleted"}

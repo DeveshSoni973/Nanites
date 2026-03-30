@@ -7,6 +7,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.exceptions import ResourceNotFoundError, ValidationError
 from app.features.nodes.models import Node, NodeType
 
 _arq_pool = None
@@ -31,9 +32,9 @@ async def validate_parent(
         return
     parent = await get_node(db, parent_id, user_id)
     if parent is None:
-        raise ValueError("Parent does not exist")
+        raise ResourceNotFoundError("Parent does not exist")
     if parent.type != NodeType.folder:
-        raise ValueError("Cannot add a child folder or note to a note.")
+        raise ValidationError("Cannot add a child folder or note to a note.")
 
 
 async def create_node(
@@ -82,15 +83,17 @@ async def get_nodes(
     parent_id: uuid.UUID | None = None,
     type: NodeType | None = None,
     title: str | None = None,
+    global_scan: bool = False,
 ) -> list[Node]:
     query = select(Node).where(
         Node.user_id == user_id,
         Node.deleted_at.is_(None),
     )
-    if parent_id is None:
-        query = query.where(Node.parent_id.is_(None))
-    else:
-        query = query.where(Node.parent_id == parent_id)
+    if not global_scan:
+        if parent_id is None:
+            query = query.where(Node.parent_id.is_(None))
+        else:
+            query = query.where(Node.parent_id == parent_id)
     if type:
         query = query.where(Node.type == type)
     if title:
@@ -125,10 +128,12 @@ async def update_node(
         .values(**values)
     )
     await db.commit()
+    if result.rowcount == 0:
+        raise ResourceNotFoundError("Node not found")
     if content is not None:
         pool = await get_arq_pool()
         await pool.enqueue_job("embed_node", str(node_id))
-    return result.rowcount or 0  # type: ignore
+    return result.rowcount
 
 
 async def delete_node(
@@ -142,7 +147,9 @@ async def delete_node(
         .values(deleted_at=datetime.now(timezone.utc))
     )
     await db.commit()
-    return result.rowcount or 0  # type: ignore
+    if result.rowcount == 0:
+        raise ResourceNotFoundError("Node not found")
+    return result.rowcount
 
 
 async def search_nodes_by_content(

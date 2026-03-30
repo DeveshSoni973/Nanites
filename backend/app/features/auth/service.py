@@ -5,6 +5,7 @@ import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.exceptions import AuthenticationError
 from app.core.security import decode_token, encode_token, verify_password
 from app.features.users.models import User
 from app.features.users.service import get_user_by_email
@@ -15,13 +16,13 @@ redis_client = aioredis.from_url(settings.REDIS_URL)
 async def authenticate_user(db: AsyncSession, email: str, password: str) -> User:
     user = await get_user_by_email(db, email)
     if not user:
-        raise ValueError("Invalid email or password")
+        raise AuthenticationError("Invalid email or password")
     if not user.is_active:
-        raise ValueError("Email not verified")
+        raise AuthenticationError("Email not verified")
     if user.deleted_at is not None:
-        raise ValueError("Invalid email or password")
+        raise AuthenticationError("Invalid email or password")
     if not verify_password(password, user.hashed_password):
-        raise ValueError("Invalid email or password")
+        raise AuthenticationError("Invalid email or password")
     return user
 
 
