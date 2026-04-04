@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -21,9 +21,13 @@ class Embedding(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     node_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("nodes.id"), nullable=False, index=True
+        ForeignKey("nodes.id"), nullable=False
     )
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    
+    __table_args__ = (
+        UniqueConstraint("node_id", "chunk_index", name="uq_node_chunk"),
+    )
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
     node_version: Mapped[int] = mapped_column(Integer, nullable=False)
     embedding: Mapped[list | None] = mapped_column(Vector(384), nullable=True)

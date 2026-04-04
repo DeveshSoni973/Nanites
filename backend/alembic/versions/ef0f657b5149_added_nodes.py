@@ -60,6 +60,9 @@ def upgrade() -> None:
         "node_embeddings",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("node_id", sa.Uuid(), nullable=False),
+        sa.Column("chunk_index", sa.Integer(), nullable=False),
+        sa.Column("chunk_text", sa.Text(), nullable=False),
+        sa.Column("node_version", sa.Integer(), nullable=False),
         sa.Column("embedding", Vector(384), nullable=True),
         sa.Column(
             "embed_status",
@@ -84,7 +87,7 @@ def upgrade() -> None:
             ["nodes.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("node_id"),
+        sa.UniqueConstraint("node_id", "chunk_index", name="uq_node_embedding_chunk"),
     )
     # ### end Alembic commands ###
 

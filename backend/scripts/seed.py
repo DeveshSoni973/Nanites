@@ -69,6 +69,7 @@ async def seed():
                     long_content = f"# {note_title}\n\n" + (note_content + "\n\n") * 5
                     print(f"      [{note_count}] Creating note: {note_title} ({len(long_content)} chars)")
                     await create_node(note_title, "note", sub_node["id"], long_content)
+                    await asyncio.sleep(0.5)  # Small delay to prevent system freeze
 
         print(f"\nSeed complete! Created {note_count} notes.")
 
