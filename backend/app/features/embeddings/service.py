@@ -14,22 +14,47 @@ logger = logging.getLogger(__name__)
 def chunk_text(content: str, chunk_size: int = 800, overlap: int = 200) -> list[str]:
     if not content or not content.strip():
         return []
-    if len(content) < chunk_size:
+    if len(content) <= chunk_size:
         return [content]
+    
     chunks = []
     start = 0
     while start < len(content):
-        end = start + chunk_size
-        if end >= len(content):
+        # 1. Determine local end (the maximum possible window)
+        end = min(start + chunk_size, len(content))
+        
+        # 2. If we are at the end, just add and stop
+        if end == len(content):
             chunks.append(content[start:])
             break
-        for sep in ["\n\n", "\n", ". ", " "]:
-            pos = content.rfind(sep, start, end)
-            if pos > start:
-                end = pos + len(sep)
-                break
+
+        # 3. Search for a separator to break at. 
+        # We look in the range [start + chunk_size/2, end] 
+        # to guarantee at least 400 chars of progress (if chunk_size=800).
+        # We search BACKWARDS from 'end' to get the biggest chunk possible.
+        min_progress_pos = start + (chunk_size // 2)
+        found_sep = False
+        
+        if min_progress_pos < end:
+            for sep in ["\n\n", "\n", ". ", " "]:
+                pos = content.rfind(sep, min_progress_pos, end)
+                if pos != -1:
+                    end = pos + len(sep)
+                    found_sep = True
+                    break
+        
+        # 4. Add the chunk
+        # If no separator was found in the "good" range, 'end' remains start + chunk_size
         chunks.append(content[start:end])
+        
+        # 5. Move start forward
         start = end - overlap
+        
+        # Safety: If for some reason the above didn't make progress, force it
+        # This shouldn't be possible now, but keeps the loop safe.
+        if len(chunks) > 1000: # Sanity limit for a 3kb string
+            break
+
     return chunks
 
 

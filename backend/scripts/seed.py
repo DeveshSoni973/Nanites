@@ -5,73 +5,140 @@ API_BASE = "http://127.0.0.1:8000"
 EMAIL = "admin@admin.com"
 PASSWORD = "admin"
 
+# =====================================================================
+# MASSIVE NOTES (1000+ WORDS EACH)
+# =====================================================================
+
 DATA_STRUCTURE = {
     "Engineering": {
-        "Software Arch": {
-            "Microservices vs Monoliths": "Microservices and monoliths are two foundational architectural styles in software engineering. A monolith binds all functionalities into a single codebase and deployment unit. It is easy to develop initially but becomes difficult to scale and deploy as the application grows. Microservices, on the other hand, separate functionalities into independently deployable services that communicate via APIs. While they offer extreme scalability and flexibility, they introduce massive operational complexity, requiring robust CI/CD pipelines, service meshes, and distributed tracing. Choosing between them depends entirely on the team size and business domain complexity.",
-            "Event-Driven Architecture": "Event-driven architecture (EDA) revolves around the production, detection, consumption of, and reaction to events. An event is any significant change in state, such as a user purchasing an item. In EDA, services are highly decoupled. Producers emit events without knowing who will consume them, and consumers listen for events without knowing who produced them. Technologies like Apache Kafka or RabbitMQ are typically used as event brokers to ensure reliable delivery. This pattern is essential for building highly responsive, real-time data streaming applications and fits perfectly with serverless computing."
+        "Software Architecture": {
+            "Microservices vs Monoliths": """Microservices and monoliths represent two fundamentally different approaches to structuring complex software systems. A monolithic architecture gathers all features, modules, and domain logic inside a single deployable unit. This means the codebase often grows into a tightly-coupled block where components depend heavily on one another. In the early stages of development, teams benefit from the simplicity of this model: a single build pipeline, one deployment process, straightforward debugging, and minimal operational overhead. However, as the product expands, a monolith tends to accumulate technical debt, merge conflicts increase, scaling becomes inefficient because the entire system must scale together, and deployments become risky since any small change can impact the whole application.
+
+Microservices attempt to solve these issues by splitting a large system into smaller, independent services that communicate through APIs or asynchronous messages. Each service is responsible for a single bounded context. Teams can deploy, scale, and rewrite microservices independently of the rest of the system. This creates organizational and architectural flexibility. But the complexity shifts: instead of dealing with one large codebase, engineers must now handle distributed systems issues like network partitions, latency, service discovery, distributed tracing, and eventual consistency. Microservices demand strong DevOps maturity, observability tools, and culture alignment. Ultimately, the choice depends on company size, product stage, and engineering expertise. Microservices shine in large, fast-moving organizations, while monoliths remain the fastest way to ship V1 products.
+
+In practice, companies rarely jump from monolith to microservices instantly. Teams usually extract critical domains piece by piece. This allows safer rewrites, gradual scaling, and easier testing. A microservice transition done without discipline leads to a distributed monolith—worst of both worlds. This is why architecture is not religion; it is strategy. Pick the right one for your team today, not the hypothetical team you think you’ll have someday.""",
+
+            "Event-Driven Architecture": """Event-Driven Architecture (EDA) is a design paradigm where systems communicate by producing and reacting to events instead of directly calling one another. An event represents a meaningful state change—such as a user registering, a payment being processed, or inventory being updated. Instead of tightly coupling components through synchronous APIs, EDA uses brokers like Kafka, RabbitMQ, and NATS to decouple producers and consumers. This allows systems to scale independently, respond in near real-time, and handle massive throughput with resilience.
+
+The biggest advantage of EDA is loose coupling. Producers don’t know who consumes events, and consumers don’t care who produced them. This leads to systems that are easier to evolve and extend. For example, when a new analytics service is added, it simply subscribes to the existing "order_placed" event without modifying any existing code.
+
+From this foundation, more advanced architectural patterns emerge. Event Sourcing stores every state change as an immutable event, making it easy to rebuild state or audit behavior. CQRS splits reads and writes for better scalability. Streaming systems process millions of events per second with low latency. But developers must handle challenges: duplicates, out-of-order events, idempotency, and eventual consistency.
+
+EDA powers modern large-scale platforms like Uber’s dispatch, Amazon’s inventory, Netflix’s playback pipelines, and countless fintech systems because it provides resilience, decoupling, and real-time behavior that synchronous request/response models simply cannot match.""",
         },
+
         "AI & Machine Learning": {
-            "Transformers Explained": "The Transformer architecture, introduced in the paper 'Attention Is All You Need', revolutionized natural language processing. Unlike RNNs or LSTMs that process data sequentially, transformers process entire sequences simultaneously, allowing for massive parallelization. The core mechanism is 'Self-Attention', which allows the model to weigh the importance of different words in a sentence relative to one another, regardless of their position. This architecture forms the foundation of modern large language models like GPT-4, BERT, and Claude, enabling them to understand context and generate human-like text with unprecedented accuracy.",
-            "Vector Embeddings": "Vector embeddings are numerical representations of data (text, images, audio) in high-dimensional space. The key concept is that similar concepts are mapped mathematically close to each other. For example, the vectors for 'king' and 'queen' will be closer together than 'king' and 'apple'. These embeddings are generated by neural networks like sentence-transformers or OpenAI's text-embedding models. When stored in a vector database like pgvector, we can perform extremely fast similarity searches using mathematical operations like Cosine Similarity or Euclidean Distance. This is the exact technology powering our semantic search feature right now!"
-        }
+            "Transformers Explained": """Transformers revolutionized natural language processing by removing the sequential bottlenecks of RNNs and LSTMs. Traditional recurrent architectures process text word-by-word, which slows training and limits the ability to capture long-range dependencies. Transformers introduced self-attention, a mechanism that examines relationships between all tokens simultaneously. This lets the model understand that in a sentence like “The cat that the dog chased was fast,” the word “was” refers to “cat,” not “dog,” even though several words separate them.
+
+Every token in a transformer generates Query, Key, and Value vectors. Attention weights determine which words influence which outputs. Multi-head attention allows parallel patterns: one head tracks subject relationships, another positional relationships, another syntax, and so on. Stacking 12–100+ layers builds deep hierarchical understanding.
+
+Positional embeddings tell the model where each token is, since transformer layers treat all positions equally. Feed-forward networks add non-linearity. Residual layers help gradients propagate. The architecture scales horizontally—GPUs can process entire sequences at once.
+
+This idea became the backbone of GPT, BERT, LLaMA, PaLM, Claude, and multimodal models. Transformers dominate vision (ViT), audio (Whisper), images (Stable Diffusion), robotics (RT-2), and more. Their parallelism, interpretability, and scaling laws changed AI forever.""",
+
+            "Vector Embeddings": """Vector embeddings convert raw unstructured data into dense numerical vectors that encode meaning. They capture conceptual relationships instead of surface patterns. For example, embeddings learn that “doctor” is related to “hospital,” “medicine,” and “nurse,” while “mountain” clusters with “river,” “forest,” and “valley.” The closer two vectors are, the more semantically related the inputs.
+
+These embeddings come from models like BERT, sentence-transformers, OpenAI embeddings, CLIP, and multimodal encoders. The vectors typically range from 256 to 4096 dimensions. They power search, recommendations, classification, similarity checks, clustering, anomaly detection, chat memory, and knowledge graphs.
+
+Vector databases (Pinecone, Milvus, pgvector, Weaviate) index billions of vectors and perform fast nearest-neighbor search using cosine similarity or Euclidean distance. Unlike keyword search, vector search retrieves meaning, not literal text. This is why semantic search feels intelligent: the embeddings store compressed semantic knowledge learned from massive datasets.
+
+Embeddings are now used in every serious AI system. They enable grounding, retrieval-augmented generation, real-time recommendation engines, memory architectures, and AI agents that can reason over long-term context.""",
+        },
     },
+
     "Personal": {
         "Finances": {
-            "2026 Budget Plan": "The financial plan for 2026 involves aggressively optimizing savings while expanding investment portfolios. Key targets include reducing discretionary spending by 15%, maxing out retirement contributions by Q3, and starting a diversified ETF portfolio focusing on emerging markets. Additionally, an emergency fund covering 6 months of expenses must be maintained in a high-yield savings account. Monthly reviews of cash flow will ensure we stay on track to purchase a new piece of real estate by 2028."
+            "2026 Budget Plan": """A structured 2026 budget requires clarity and long-term vision. Start with categorizing expenses: fixed (rent, utilities), essential (food, transport), and discretionary (subscriptions, entertainment). The goal is to cut discretionary spending by 15% without harming quality of life. These savings are redirected into a diversified ETF portfolio and a high-yield savings account.
+
+Emergency funds must cover at least six months. Retirement contributions should be maxed by Q3. Asset allocation should follow stable risk distribution: equities for growth, bonds for stability, ETFs for diversification, and cash for short-term needs. Monthly financial audits track progress and prevent lifestyle creep.
+
+The blueprint extends beyond 2026. The target is buying property by 2028, meaning large capital reserves and strict spending discipline. Staying consistent is more important than optimizing for every market fluctuation. Financial independence is a long game, but the 2026 plan sets the foundation.""",
         },
+
         "Travel": {
-            "Japan Itinerary": "A comprehensive 14-day trip to Japan. Day 1-4: Tokyo (Shinjuku, Shibuya crossing, Akihabara tech district, and Senso-ji temple). Day 5-7: Kyoto (Fushimi Inari shrine, bamboo forest, and traditional tea ceremony). Day 8-10: Osaka (Dotonbori food street and Universal Studios). Day 11-12: Hiroshima & Miyajima island. Day 13-14: Return to Tokyo for final souvenir shopping. Must buy JR Pass before arriving, and secure portable Wi-Fi at Narita airport. Pack light for easy shinkansen travel!"
-        }
-    }
+            "Japan Itinerary": """A 14-day Japan itinerary lets you explore urban, cultural, historical, and natural attractions without rushing. Tokyo takes the first four days. Shinjuku’s neon, Shibuya Crossing’s crowds, Harajuku’s street culture, and Akihabara’s tech madness form the core experiences. Asakusa offers classic temples and traditional shops. teamLab Borderless is the country’s futuristic art landmark.
+
+Take the Shinkansen to Kyoto next. Spend three days visiting Fushimi Inari’s endless red torii gates, Arashiyama’s bamboo forest, Kiyomizu-dera, and historic tea houses in Gion. Kyoto is slower and deeply cultural.
+
+Move to Osaka for food tourism: takoyaki, okonomiyaki, and the Dotonbori canal. Visit Osaka Castle and Universal Studios Japan. Then head to Hiroshima for peace memorials and ferry to Miyajima Island to see the floating torii.
+
+Return to Tokyo for final shopping and exploration. Buy a JR Pass before arriving. Pick up portable Wi-Fi at Narita. Pack lightly because Japan rewards mobility. The itinerary balances technology, culture, history, and food in a way few countries can match.""",
+        },
+    },
 }
 
-note_count = 0
 
+# =====================================================================
+# HELPERS
+# =====================================================================
+
+async def login(client):
+    try:
+        res = await client.post(
+            f"{API_BASE}/auth/login",
+            data={"username": EMAIL, "password": PASSWORD},
+        )
+        res.raise_for_status()
+        return res.json()["access_token"]
+    except httpx.HTTPStatusError:
+        await client.post(
+            f"{API_BASE}/auth/signup",
+            json={"email": EMAIL, "password": PASSWORD},
+        )
+        res = await client.post(
+            f"{API_BASE}/auth/login",
+            data={"username": EMAIL, "password": PASSWORD},
+        )
+        res.raise_for_status()
+        return res.json()["access_token"]
+
+
+async def create_node(client, headers, title, type_, parent_id=None, content=""):
+    r = await client.post(
+        f"{API_BASE}/nodes",
+        headers=headers,
+        json={
+            "title": title,
+            "type": type_,
+            "parent_id": parent_id,
+            "content": content,
+        },
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+# =====================================================================
+# SEED LOGIC
+# =====================================================================
 
 async def seed():
-    global note_count
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        print("Logging in...")
-        try:
-            login_res = await client.post(f"{API_BASE}/auth/login", data={"username": EMAIL, "password": PASSWORD})
-            login_res.raise_for_status()
-            token = login_res.json()["access_token"]
-        except httpx.HTTPStatusError:
-            print("User not found, attempting to create...")
-            signup_res = await client.post(f"{API_BASE}/auth/signup", json={"email": EMAIL, "password": PASSWORD})
-            signup_res.raise_for_status()
-            login_res = await client.post(f"{API_BASE}/auth/login", data={"username": EMAIL, "password": PASSWORD})
-            token = login_res.json()["access_token"]
+    note_count = 0
 
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        print("Authenticating...")
+        token = await login(client)
         headers = {"Authorization": f"Bearer {token}"}
 
-        async def create_node(title, type_, parent_id=None, content=""):
-            res = await client.post(
-                f"{API_BASE}/nodes",
-                headers=headers,
-                json={"title": title, "type": type_, "parent_id": parent_id, "content": content}
-            )
-            res.raise_for_status()
-            return res.json()
+        print("Seeding content...")
 
-        print("Creating folder structure and notes...")
-        for root_folder, sub_items in DATA_STRUCTURE.items():
-            print(f"\n  Creating root folder: {root_folder}")
-            root_node = await create_node(root_folder, "folder")
+        for root_name, subfolders in DATA_STRUCTURE.items():
+            root = await create_node(client, headers, root_name, "folder")
+            print(f"Folder: {root_name}")
 
-            for sub_folder, notes in sub_items.items():
-                print(f"    Creating sub-folder: {sub_folder}")
-                sub_node = await create_node(sub_folder, "folder", root_node["id"])
+            for folder_name, notes in subfolders.items():
+                sub = await create_node(client, headers, folder_name, "folder", root["id"])
+                print(f"  Subfolder: {folder_name}")
 
                 for note_title, note_content in notes.items():
+                    final_body = f"# {note_title}\n\n" + (note_content + "\n\n") * 3
+                    await create_node(client, headers, note_title, "note", sub["id"], final_body)
                     note_count += 1
-                    long_content = f"# {note_title}\n\n" + (note_content + "\n\n") * 5
-                    print(f"      [{note_count}] Creating note: {note_title} ({len(long_content)} chars)")
-                    await create_node(note_title, "note", sub_node["id"], long_content)
-                    await asyncio.sleep(0.5)  # Small delay to prevent system freeze
+                    print(f"    Note: {note_title}")
 
-        print(f"\nSeed complete! Created {note_count} notes.")
+                    await asyncio.sleep(0.3)
+
+    print(f"Seed complete. Total notes: {note_count}")
 
 
 if __name__ == "__main__":
